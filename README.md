@@ -1,4 +1,4 @@
-# CS2Turrets — CounterStrikeSharp 0.3.0-preview
+# CS2Turrets — CounterStrikeSharp 0.4.0-preview
 
 Counter-Strike 2 server plugin: use **G** (default `drop`) to open the turret menu, aim at flat ground, press **G** again to install, and press **E** (`+use`) near your turret to upgrade.
 
