@@ -97,8 +97,10 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         var pos = pawn.AbsOrigin;
         var a = pawn.EyeAngles;
         var yaw = a.Y * Math.PI / 180.0;
-        var destination = new Vector(pos.X + (float)(Math.Cos(yaw) * Config.MaxPlacementDistance),
-            pos.Y + (float)(Math.Sin(yaw) * Config.MaxPlacementDistance), pos.Z + 64f);
+        var pitch = a.X * Math.PI / 180.0;
+        var horizontal = Math.Cos(pitch) * Config.MaxPlacementDistance;
+        var destination = new Vector(pos.X + (float)(Math.Cos(yaw) * horizontal),
+            pos.Y + (float)(Math.Sin(yaw) * horizontal), pos.Z + 64f - (float)(Math.Sin(pitch) * Config.MaxPlacementDistance));
         var eye = new Vector(pos.X, pos.Y, pos.Z + 64f);
         var trace = Trace.TraceRay(eye, destination, pawn);
         if (!trace.DidHit)
