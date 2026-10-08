@@ -225,9 +225,14 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         if (_rockets.Count >= Math.Clamp(Config.MaxActiveRockets, 0, 128)) return;
         var enemy = target.PlayerPawn.Value?.AbsOrigin;
         if (enemy == null) return;
-        var start = ForwardOffset(turret.Position, turret.Yaw, Config.RocketSpawnForward, Config.RocketSpawnHeight);
+        // Launch forward towards the acquired enemy, so the projectile never
+        // needs to fly backwards through the turret's own visual models.
+        var mount = ForwardOffset(turret.Position, turret.Yaw, 0f, Config.RocketSpawnHeight);
         var targetPoint = new Vector(enemy.X, enemy.Y, enemy.Z + 36);
-        var direction = Normalize(new Vector(targetPoint.X - start.X, targetPoint.Y - start.Y, targetPoint.Z - start.Z));
+        var direction = Normalize(new Vector(targetPoint.X - mount.X, targetPoint.Y - mount.Y, targetPoint.Z - mount.Z));
+        var muzzleDistance = Math.Clamp(Config.RocketSpawnForward, 24f, 128f);
+        var start = new Vector(mount.X + direction.X * muzzleDistance,
+            mount.Y + direction.Y * muzzleDistance, mount.Z + direction.Z * muzzleDistance);
 
         var rocket = new Rocket
         {
