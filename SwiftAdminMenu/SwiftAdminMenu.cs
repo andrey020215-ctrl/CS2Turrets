@@ -24,6 +24,8 @@ public sealed class SwiftAdminMenu : BasePlugin
         Core.Logger.LogInformation("Andrey Admin Menu loaded. Use !admin or sw_admin.");
     }
 
+    public override void Unload() { }
+
     [Command("admin", helpText: "Open server admin menu")]
     public void AdminCommand(ICommandContext context)
     {
@@ -57,7 +59,7 @@ public sealed class SwiftAdminMenu : BasePlugin
         Core.MenusAPI.OpenMenuForPlayer(player, builder.Build());
     }
 
-    private void AddAction(IMenuBuilder builder, string text, IPlayer player, Action action)
+    private void AddAction(IMenuBuilderAPI builder, string text, IPlayer player, Action action)
     {
         var option = new ButtonMenuOption(text);
         option.Click += (sender, args) =>
