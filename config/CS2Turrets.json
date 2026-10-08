@@ -46,5 +46,8 @@
   "RocketLifeSeconds": 3,
   "RocketHitRadius": 36,
   "MaxActiveRockets": 24,
-  "RocketFriendlyFire": false
+  "RocketFriendlyFire": false,
+  "EnableRocketExplosionEffects": true,
+  "RocketExplosionParticle": "particles/explosions_fx/explosion_c4_short.vpcf",
+  "ExplosionEffectLifetime": 0.7
 }
