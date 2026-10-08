@@ -21,6 +21,13 @@ public sealed class TurretConfig : BasePluginConfig
     // Must be a model available on your CS2 server. This can be changed per server.
     // Composite visual assembled from built-in CS2 assets; no custom model package required.
     [JsonPropertyName("UseCompositeVisual")] public bool UseCompositeVisual { get; set; } = true;
+    // Enable only AFTER Source 2 ModelDoc has compiled and distributed the assets.
+    // GLB/FBX files in the model source bundle cannot be loaded directly by CS2.
+    [JsonPropertyName("UseCustomTurretModel")] public bool UseCustomTurretModel { get; set; } = false;
+    [JsonPropertyName("CustomStandardModel")] public string CustomStandardModel { get; set; } = "models/cs2turrets/turret_lv1.vmdl";
+    [JsonPropertyName("CustomRocketModel")] public string CustomRocketModel { get; set; } = "models/cs2turrets/turret_lv4.vmdl";
+    [JsonPropertyName("CustomProjectileModel")] public string CustomProjectileModel { get; set; } = "models/cs2turrets/rocket.vmdl";
+
     [JsonPropertyName("BaseModel")] public string BaseModel { get; set; } = "models/props/crates/csgo_drop_crate_dangerzone.vmdl";
     [JsonPropertyName("GunModel")] public string GunModel { get; set; } = "weapons/models/m249/weapon_mach_m249.vmdl";
     [JsonPropertyName("BaseOffsetZ")] public float BaseOffsetZ { get; set; } = -2f;
