@@ -13,7 +13,22 @@
   "DamagePerLevelBonus": 4,
   "RangePerLevelBonus": 100,
   "UpgradeCooldownSeconds": 2,
-  "Model": "models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_32.vmdl",
-  "Rapid": { "Damage": 9, "Range": 750, "FireInterval": 0.38 },
-  "Heavy": { "Damage": 22, "Range": 600, "FireInterval": 1.05 }
+  "Model": "",
+  "Rapid": {
+    "Damage": 9,
+    "Range": 750,
+    "FireInterval": 0.38
+  },
+  "Heavy": {
+    "Damage": 22,
+    "Range": 600,
+    "FireInterval": 1.05
+  },
+  "UseCompositeVisual": true,
+  "BaseModel": "models/props/crates/csgo_drop_crate_dangerzone.vmdl",
+  "GunModel": "weapons/models/m249/weapon_mach_m249.vmdl",
+  "BaseOffsetZ": -2,
+  "GunOffsetForward": 4,
+  "GunOffsetZ": 20,
+  "GunPitch": -10
 }
