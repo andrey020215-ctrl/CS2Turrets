@@ -61,22 +61,26 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnServerPrecacheResources>(manifest =>
         {
+            void PrecacheIfSet(string path)
+            {
+                if (!string.IsNullOrWhiteSpace(path)) manifest.AddResource(path);
+            }
             if (Config.UseCustomTurretModel)
             {
                 // Both teams' models must be precached even if only one team is online.
                 if (Config.UseTeamSkins)
                 {
-                    PrecacheIfSet(manifest, Config.TerroristStandardModel);
-                    PrecacheIfSet(manifest, Config.CounterTerroristStandardModel);
-                    PrecacheIfSet(manifest, Config.TerroristRocketModel);
-                    PrecacheIfSet(manifest, Config.CounterTerroristRocketModel);
+                    PrecacheIfSet(Config.TerroristStandardModel);
+                    PrecacheIfSet(Config.CounterTerroristStandardModel);
+                    PrecacheIfSet(Config.TerroristRocketModel);
+                    PrecacheIfSet(Config.CounterTerroristRocketModel);
                 }
                 else
                 {
-                    PrecacheIfSet(manifest, Config.CustomStandardModel);
-                    PrecacheIfSet(manifest, Config.CustomRocketModel);
+                    PrecacheIfSet(Config.CustomStandardModel);
+                    PrecacheIfSet(Config.CustomRocketModel);
                 }
-                PrecacheIfSet(manifest, Config.CustomProjectileModel);
+                PrecacheIfSet(Config.CustomProjectileModel);
             }
             if (Config.EnableRocketExplosionEffects && !string.IsNullOrWhiteSpace(Config.RocketExplosionParticle))
                 manifest.AddResource(Config.RocketExplosionParticle);
@@ -88,12 +92,6 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             if (e.Userid != null) RemoveOwner(e.Userid.SteamID);
             return HookResult.Continue;
         });
-    }
-
-    private static void PrecacheIfSet(CounterStrikeSharp.API.Modules.Resources.ResourceManifest manifest, string path)
-    {
-        if (!string.IsNullOrWhiteSpace(path))
-            manifest.AddResource(path);
     }
 
     // Team choice is fixed when the player places the turret.
