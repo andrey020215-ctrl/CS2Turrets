@@ -23,4 +23,20 @@ for method in ("AddRocketLauncher", "LaunchRocket", "AdvanceRockets", "Detonate"
                "RemoveRocket", "SpawnExplosion"):
     assert f"private void {method}(" in plugin_source, method
 
+
+# Red and blue team skins must be configured separately, but stay disabled
+# until compiled Source 2 resources are installed and distributed to clients.
+assert settings["UseCustomTurretModel"] is False
+assert settings["UseTeamSkins"] is True
+for key in ("TerroristStandardModel", "CounterTerroristStandardModel",
+            "TerroristRocketModel", "CounterTerroristRocketModel", "CustomProjectileModel"):
+    assert settings[key].startswith("models/cs2turrets/")
+    assert settings[key].endswith(".vmdl")
+assert len({settings[x] for x in
+            ("TerroristStandardModel", "CounterTerroristStandardModel",
+             "TerroristRocketModel", "CounterTerroristRocketModel")}) == 4
+assert "GetCustomModel(turret.Team, turret.Level)" in plugin_source
+assert "PrecacheIfSet(Config.TerroristStandardModel)" in plugin_source
+assert "PrecacheIfSet(Config.CounterTerroristRocketModel)" in plugin_source
+
 print("PASS: level-4 rocket defaults and required methods verified (static smoke checks)")
