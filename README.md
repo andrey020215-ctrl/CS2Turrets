@@ -1,6 +1,18 @@
-# CS2Turrets — CounterStrikeSharp 0.4.0-preview
+# CS2Turrets — CounterStrikeSharp 0.5.0-preview
 
 Counter-Strike 2 server plugin: use **G** (default `drop`) to open the turret menu, aim at flat ground, press **G** again to install, and press **E** (`+use`) near your turret to upgrade.
+
+## Красные/синие пользовательские модели для T и CT (v0.5)
+
+Плагин поддерживает 4 варианта из нового отдельного комплекта GLB-моделей (оригинальная процедурная геометрия по изображению): T — красная, CT — синяя. Уровни 1–3 используют обычную версию, уровень 4 автоматически заменяет её ракетной версией той же команды. Активна проверка конфигурации на GitHub Actions.
+
+**Скомпилированные Source 2 модели не вложены в DLL/ZIP установщика**. После получения архива исходников GLB нужно отдельно подготовить ассеты в Blender + Source 2 ModelDoc, материалы и клиентскую доставку. До этого момента `UseCustomTurretModel=false` оставлен по умолчанию; `UseTeamSkins=true` лишь выбирает нужные пути после включения кастомных моделей. Инструкция: [docs/3D_IMPORT.md](docs/3D_IMPORT.md).
+
+| Команда | Уровни 1–3 | Уровень 4 |
+| --- | --- | --- |
+| T (красная) | `sentry_red_lv1.vmdl` | `sentry_red_lv4.vmdl` |
+| CT (синяя) | `sentry_blue_lv1.vmdl` | `sentry_blue_lv4.vmdl` |
+
 
 ## Four levels
 
