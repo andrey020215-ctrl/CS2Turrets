@@ -46,6 +46,9 @@ public sealed class TurretConfig : BasePluginConfig
     [JsonPropertyName("RocketHitRadius")] public float RocketHitRadius { get; set; } = 36f;
     [JsonPropertyName("MaxActiveRockets")] public int MaxActiveRockets { get; set; } = 24;
     [JsonPropertyName("RocketFriendlyFire")] public bool RocketFriendlyFire { get; set; } = false;
+    [JsonPropertyName("EnableRocketExplosionEffects")] public bool EnableRocketExplosionEffects { get; set; } = true;
+    [JsonPropertyName("RocketExplosionParticle")] public string RocketExplosionParticle { get; set; } = "particles/explosions_fx/explosion_c4_short.vpcf";
+    [JsonPropertyName("ExplosionEffectLifetime")] public float ExplosionEffectLifetime { get; set; } = 0.7f;
     [JsonPropertyName("Rapid")] public TurretStats Rapid { get; set; } = new() { Damage = 9, Range = 750, FireInterval = 0.38f };
     [JsonPropertyName("Heavy")] public TurretStats Heavy { get; set; } = new() { Damage = 22, Range = 600, FireInterval = 1.05f };
 }
