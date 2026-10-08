@@ -19,7 +19,15 @@ public sealed class TurretConfig : BasePluginConfig
     [JsonPropertyName("RangePerLevelBonus")] public float RangePerLevelBonus { get; set; } = 100;
     [JsonPropertyName("UpgradeCooldownSeconds")] public float UpgradeCooldownSeconds { get; set; } = 2;
     // Must be a model available on your CS2 server. This can be changed per server.
-    [JsonPropertyName("Model")] public string Model { get; set; } = "models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_32.vmdl";
+    // Composite visual assembled from built-in CS2 assets; no custom model package required.
+    [JsonPropertyName("UseCompositeVisual")] public bool UseCompositeVisual { get; set; } = true;
+    [JsonPropertyName("BaseModel")] public string BaseModel { get; set; } = "models/props/crates/csgo_drop_crate_dangerzone.vmdl";
+    [JsonPropertyName("GunModel")] public string GunModel { get; set; } = "weapons/models/m249/weapon_mach_m249.vmdl";
+    [JsonPropertyName("BaseOffsetZ")] public float BaseOffsetZ { get; set; } = -2f;
+    [JsonPropertyName("GunOffsetForward")] public float GunOffsetForward { get; set; } = 4f;
+    [JsonPropertyName("GunOffsetZ")] public float GunOffsetZ { get; set; } = 20f;
+    [JsonPropertyName("GunPitch")] public float GunPitch { get; set; } = -10f;
+    [JsonPropertyName("Model")] public string Model { get; set; } = "";
     [JsonPropertyName("Rapid")] public TurretStats Rapid { get; set; } = new() { Damage = 9, Range = 750, FireInterval = 0.38f };
     [JsonPropertyName("Heavy")] public TurretStats Heavy { get; set; } = new() { Damage = 22, Range = 600, FireInterval = 1.05f };
 }
