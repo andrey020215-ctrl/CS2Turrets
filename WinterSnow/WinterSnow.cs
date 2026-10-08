@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -124,7 +125,7 @@ public sealed class WinterSnowPlugin : BasePlugin, IPluginConfig<WinterSnowConfi
             {
                 f.FadeLeft -= dt;
                 float k = Math.Clamp(f.FadeLeft / Config.FadeSeconds, 0f, 1f);
-                f.Entity.Color = new Color(205, 235, 255, (byte)(235 * k));
+                f.Entity.Color = Color.FromArgb((byte)(235 * k), 205, 235, 255);
                 f.Entity.FontSize = Math.Max(4f, f.BaseSize * (0.65f + 0.35f * k));
                 Utilities.SetStateChanged(f.Entity, "CPointWorldText", "m_Color");
                 Utilities.SetStateChanged(f.Entity, "CPointWorldText", "m_flFontSize");
@@ -177,7 +178,7 @@ public sealed class WinterSnowPlugin : BasePlugin, IPluginConfig<WinterSnowConfi
         float vz = -(Config.FallSpeedMin + (float)_rng.NextDouble() * (Config.FallSpeedMax - Config.FallSpeedMin));
 
         e.MessageText = Config.Glyph;
-        e.Color = new Color(205, 235, 255, 235);
+        e.Color = Color.FromArgb(235, 205, 235, 255);
         e.FontSize = size;
         e.WorldUnitsPerPx = 0.08f;
         e.Fullbright = true;
@@ -201,7 +202,7 @@ public sealed class WinterSnowPlugin : BasePlugin, IPluginConfig<WinterSnowConfi
         f.Vel = new Vector(((float)_rng.NextDouble() * 2f - 1f) * Config.HorizontalDrift, ((float)_rng.NextDouble() * 2f - 1f) * Config.HorizontalDrift, -(Config.FallSpeedMin + (float)_rng.NextDouble() * (Config.FallSpeedMax - Config.FallSpeedMin)));
         f.Bounces = 0;
         f.FadeLeft = -1f;
-        f.Entity.Color = new Color(205, 235, 255, 235);
+        f.Entity.Color = Color.FromArgb(235, 205, 235, 255);
         f.Entity.FontSize = f.BaseSize;
         Utilities.SetStateChanged(f.Entity, "CPointWorldText", "m_Color");
         Utilities.SetStateChanged(f.Entity, "CPointWorldText", "m_flFontSize");
