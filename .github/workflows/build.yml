@@ -1,0 +1,36 @@
+name: Build CS2Turrets
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'CS2Turrets/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore CS2Turrets/CS2Turrets.csproj
+      - name: Build release
+        run: dotnet build CS2Turrets/CS2Turrets.csproj --configuration Release --no-restore
+      - name: Prepare server plugin
+        run: |
+          mkdir -p staging/addons/counterstrikesharp/plugins/CS2Turrets
+          cp CS2Turrets/bin/Release/net10.0/CS2Turrets.dll staging/addons/counterstrikesharp/plugins/CS2Turrets/
+          mkdir -p staging/addons/counterstrikesharp/configs/plugins/CS2Turrets
+          cp config/CS2Turrets.json staging/addons/counterstrikesharp/configs/plugins/CS2Turrets/
+          cd staging && zip -r ../CS2Turrets-server.zip addons
+      - name: Upload installable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: CS2Turrets-server
+          path: CS2Turrets-server.zip
+          if-no-files-found: error
