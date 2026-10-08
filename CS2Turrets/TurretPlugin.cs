@@ -255,6 +255,105 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         _rockets.Add(rocket);
     }
 
+
+    // Server-authoritative visible rocket flight, ray-cast collisions and splash damage.
+    // Caps both active rockets and their lifetime to keep the tick cost bounded.
+    private void AdvanceRockets()
+    {
+        if (_rockets.Count == 0) return;
+        var step = Math.Clamp(Config.RocketSpeed, 100f, 2500f) *
+            Math.Clamp(Server.TickInterval, .005f, .05f);
+
+        foreach (var rocket in _rockets.ToArray())
+        {
+            if (_clock >= rocket.ExpiresAt)
+            {
+                RemoveRocket(rocket);
+                continue;
+            }
+
+            var next = new Vector(
+                rocket.Position.X + rocket.Direction.X * step,
+                rocket.Position.Y + rocket.Direction.Y * step,
+                rocket.Position.Z + rocket.Direction.Z * step);
+
+            var hit = rocket.Visual?.IsValid == true
+                ? Trace.TraceEndShape(rocket.Position, next, rocket.Visual)
+                : Trace.TraceEndShape(rocket.Position, next);
+
+            if (hit.DidHit())
+            {
+                Detonate(rocket, hit.EndPos);
+                continue;
+            }
+
+            var impacted = false;
+            foreach (var player in Utilities.GetPlayers().Where(Usable))
+            {
+                if (!Config.RocketFriendlyFire && player.Team == rocket.Team) continue;
+                if (!Config.AllowBotsAsTargets && player.IsBot) continue;
+                var origin = player.PlayerPawn.Value?.AbsOrigin;
+                if (origin == null) continue;
+                var center = new Vector(origin.X, origin.Y, origin.Z + 36);
+                if (SegmentDistance(rocket.Position, next, center) >
+                    Math.Clamp(Config.RocketHitRadius, 8f, 128f)) continue;
+                Detonate(rocket, center);
+                impacted = true;
+                break;
+            }
+            if (impacted) continue;
+
+            rocket.Position = next;
+            if (rocket.Visual?.IsValid == true)
+            {
+                try { rocket.Visual.Teleport(next, AimRotation(rocket.Direction), null); }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Rocket movement failed");
+                    RemoveRocket(rocket);
+                }
+            }
+        }
+    }
+
+    private static float SegmentDistance(Vector start, Vector end, Vector point)
+    {
+        var dx = end.X - start.X;
+        var dy = end.Y - start.Y;
+        var dz = end.Z - start.Z;
+        var squared = dx * dx + dy * dy + dz * dz;
+        var t = squared < .0001f ? 0f : Math.Clamp(
+            ((point.X - start.X) * dx + (point.Y - start.Y) * dy +
+             (point.Z - start.Z) * dz) / squared, 0f, 1f);
+        return Distance(new Vector(start.X + t * dx, start.Y + t * dy, start.Z + t * dz), point);
+    }
+
+    private void Detonate(Rocket rocket, Vector impact)
+    {
+        var radius = Math.Clamp(Config.RocketRadius, 16f, 512f);
+        foreach (var player in Utilities.GetPlayers().Where(Usable))
+        {
+            if (!Config.RocketFriendlyFire && player.Team == rocket.Team) continue;
+            if (!Config.AllowBotsAsTargets && player.IsBot) continue;
+            var origin = player.PlayerPawn.Value?.AbsOrigin;
+            if (origin == null) continue;
+            var center = new Vector(origin.X, origin.Y, origin.Z + 36);
+            var distance = Distance(impact, center);
+            if (distance > radius) continue;
+            var factor = 1f - .75f * distance / radius;
+            var damage = Math.Max(1, (int)MathF.Round(Math.Clamp(Config.RocketDamage, 1, 250) * factor));
+            Damage(player, damage);
+        }
+        RemoveRocket(rocket);
+    }
+
+    private void RemoveRocket(Rocket rocket)
+    {
+        try { if (rocket.Visual?.IsValid == true) rocket.Visual.Remove(); }
+        catch (Exception ex) { Logger.LogWarning(ex, "Unable to remove rocket projectile"); }
+        _rockets.Remove(rocket);
+    }
+
     private void OnTick()
     {
         if (!Config.Enabled) return;
