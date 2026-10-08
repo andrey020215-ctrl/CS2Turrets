@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'CS2Turrets/**'
+      - 'config/**'
+      - 'tests/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -17,6 +19,8 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Check rocket configuration
+        run: python3 tests/verify_config.py
       - name: Restore
         run: dotnet restore CS2Turrets/CS2Turrets.csproj
       - name: Build release
