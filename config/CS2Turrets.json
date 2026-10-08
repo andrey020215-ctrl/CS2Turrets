@@ -49,5 +49,9 @@
   "RocketFriendlyFire": false,
   "EnableRocketExplosionEffects": true,
   "RocketExplosionParticle": "particles/explosions_fx/explosion_c4_short.vpcf",
-  "ExplosionEffectLifetime": 0.7
+  "ExplosionEffectLifetime": 0.7,
+  "UseCustomTurretModel": false,
+  "CustomStandardModel": "models/cs2turrets/turret_lv1.vmdl",
+  "CustomRocketModel": "models/cs2turrets/turret_lv4.vmdl",
+  "CustomProjectileModel": "models/cs2turrets/rocket.vmdl"
 }
