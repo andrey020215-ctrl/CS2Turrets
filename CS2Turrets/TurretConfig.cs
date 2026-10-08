@@ -14,7 +14,7 @@ public sealed class TurretConfig : BasePluginConfig
     [JsonPropertyName("MinimumTurretSpacing")] public float MinimumTurretSpacing { get; set; } = 95;
     [JsonPropertyName("UpgradeDistance")] public float UpgradeDistance { get; set; } = 120;
     [JsonPropertyName("TargetCheckInterval")] public float TargetCheckInterval { get; set; } = 0.15f;
-    [JsonPropertyName("MaxLevel")] public int MaxLevel { get; set; } = 3;
+    [JsonPropertyName("MaxLevel")] public int MaxLevel { get; set; } = 4;
     [JsonPropertyName("DamagePerLevelBonus")] public int DamagePerLevelBonus { get; set; } = 4;
     [JsonPropertyName("RangePerLevelBonus")] public float RangePerLevelBonus { get; set; } = 100;
     [JsonPropertyName("UpgradeCooldownSeconds")] public float UpgradeCooldownSeconds { get; set; } = 2;
@@ -28,6 +28,24 @@ public sealed class TurretConfig : BasePluginConfig
     [JsonPropertyName("GunOffsetZ")] public float GunOffsetZ { get; set; } = 20f;
     [JsonPropertyName("GunPitch")] public float GunPitch { get; set; } = -10f;
     [JsonPropertyName("Model")] public string Model { get; set; } = "";
+    // Level 4 rocket launcher. The stock HE grenade is only a visible placeholder
+    // for the warhead, NOT a compiled custom rocket model.
+    [JsonPropertyName("RocketLevel")] public int RocketLevel { get; set; } = 4;
+    [JsonPropertyName("RocketLauncherModel")] public string RocketLauncherModel { get; set; } = "weapons/models/negev/weapon_mach_negev.vmdl";
+    [JsonPropertyName("RocketVisualModel")] public string RocketVisualModel { get; set; } = "weapons/models/grenade/hegrenade/weapon_hegrenade.vmdl";
+    [JsonPropertyName("RocketLauncherHeight")] public float RocketLauncherHeight { get; set; } = 50f;
+    [JsonPropertyName("LoadedRocketHeight")] public float LoadedRocketHeight { get; set; } = 66f;
+    [JsonPropertyName("LoadedRocketForward")] public float LoadedRocketForward { get; set; } = 16f;
+    [JsonPropertyName("RocketSpawnHeight")] public float RocketSpawnHeight { get; set; } = 75f;
+    [JsonPropertyName("RocketSpawnForward")] public float RocketSpawnForward { get; set; } = 62f;
+    [JsonPropertyName("RocketDamage")] public int RocketDamage { get; set; } = 90;
+    [JsonPropertyName("RocketRadius")] public float RocketRadius { get; set; } = 145f;
+    [JsonPropertyName("RocketSpeed")] public float RocketSpeed { get; set; } = 800f;
+    [JsonPropertyName("RocketFireInterval")] public float RocketFireInterval { get; set; } = 2.5f;
+    [JsonPropertyName("RocketLifeSeconds")] public float RocketLifeSeconds { get; set; } = 3f;
+    [JsonPropertyName("RocketHitRadius")] public float RocketHitRadius { get; set; } = 36f;
+    [JsonPropertyName("MaxActiveRockets")] public int MaxActiveRockets { get; set; } = 24;
+    [JsonPropertyName("RocketFriendlyFire")] public bool RocketFriendlyFire { get; set; } = false;
     [JsonPropertyName("Rapid")] public TurretStats Rapid { get; set; } = new() { Damage = 9, Range = 750, FireInterval = 0.38f };
     [JsonPropertyName("Heavy")] public TurretStats Heavy { get; set; } = new() { Damage = 22, Range = 600, FireInterval = 1.05f };
 }
