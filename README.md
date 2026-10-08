@@ -1,68 +1,86 @@
-# CS2Turrets — CounterStrikeSharp
+# CS2Turrets — CounterStrikeSharp 0.3.0-preview
 
-> **Preview / experimental implementation.** Compiled successfully on GitHub Actions ([visual model build #5](https://github.com/andrey020215-ctrl/CS2Turrets/actions/runs/37745105109)) against CounterStrikeSharp.API 1.0.376 and .NET 10. **Live CS2 gameplay has not been tested.** Test on a private server before production. The `Damage` routine directly changes HP; kills use `CommitSuicide` and do not credit the turret owner.
+Counter-Strike 2 server plugin: use **G** (default `drop`) to open the turret menu, aim at flat ground, press **G** again to install, and press **E** (`+use`) near your turret to upgrade.
 
-## Gameplay
+## Four levels
 
-- G (default `drop`) opens a CounterStrikeSharp HTML menu; choose Rapid or Heavy turret.
-- Aim at a nearby surface and press G again to place the selected type. Use `!turret_place` as an alternative.
-- Approach one of your own turrets and press E (`+use`) to upgrade it, maximum level 3.
-- Enemy players in range are targeted automatically if line of sight is clear.
-- Owner/team limits, minimum spacing, and upgrades are configurable.
-- Turrets are removed when the round begins, the owner disconnects, or the map changes.
+| Level | Behavior |
+| --- | --- |
+| 1 | Regular turret, automatically attacks nearby enemies |
+| 2 | Bullet damage and range increase |
+| 3 | Further bullet damage and range increase |
+| **4** | **Rocket launcher appears above the turret. The turret fires actual moving, visible server-simulated rocket projectiles instead of instant bullets, which explode with splash damage.** |
 
-## Server requirements
+Level four spawns two additional stock CS2 props: a **Negev** gun model as an upper launcher-like module and a **HE grenade** mesh as the loaded warhead. The flying rocket uses that same HE mesh. These are **temporary stock-game placeholders**, NOT a true custom missile or unique 3D model. Their runtime visibility is not yet verified. Set `RocketLauncherModel` and `RocketVisualModel` to paths of custom compiled `.vmdl_c` resources (without the `_c` suffix) when your real model package is ready.
 
-- Dedicated CS2 server with [Metamod:Source](https://www.sourcemm.net/) and a matching [CounterStrikeSharp](https://docs.cssharp.dev/) release.
-- .NET runtime required by the CounterStrikeSharp release.
-- A model path actually available on your CS2 server (see caveat below).
+### Rocket parameters
 
-## Build
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `MaxLevel` | 4 | Last upgrade |
+| `RocketLevel` | 4 | Level at which rockets activate |
+| `RocketDamage` | 90 | Maximum damage at explosion center |
+| `RocketRadius` | 145 | Splash radius in game units |
+| `RocketSpeed` | 800 | Movement speed in units/second |
+| `RocketFireInterval` | 2.5 | Seconds between rocket launches |
+| `RocketLifeSeconds` | 3 | Maximum rocket lifetime |
+| `RocketHitRadius` | 36 | Hit tolerance to enemy player's center |
+| `MaxActiveRockets` | 24 | Maximum active rockets on the server |
+| `RocketFriendlyFire` | false | Whether explosions damage allies |
+| `EnableRocketExplosionEffects` | true | Precache and show a small-lived impact effect |
+| `RocketExplosionParticle` | `particles/explosions_fx/explosion_c4_short.vpcf` | Built-in explosion effect |
+| `ExplosionEffectLifetime` | 0.7 | Seconds before effect entity is removed |
+
+The rocket's direction is determined at launch. It does **not** home in after launch. Each tick performs a short map collision trace and checks nearby players. On impact, splash damage falls off with distance. Visual projectiles are cleaned up when destroyed, expired, disconnected, or when a round or map changes. Rocket counts and effect lifetimes are bounded.
+
+## Requirements
+
+- CS2 dedicated game server with [Metamod:Source](https://www.sourcemm.net/) and [CounterStrikeSharp](https://docs.cssharp.dev/), compatible with CounterStrikeSharp.API 1.0.376.
+- Required .NET runtime provided by your CounterStrikeSharp server installation.
+
+## Download/build
+
+[GitHub Actions: Build CS2Turrets](https://github.com/andrey020215-ctrl/CS2Turrets/actions/workflows/build.yml)
+
+Select the **latest successful main branch run**, then download the **CS2Turrets-server** artifact. It contains an installable ZIP (`CS2Turrets-server.zip`) with the DLL and default JSON configuration. A successful GitHub Actions run confirms only compilation and packaging — **not gameplay testing**.
+
+To build from source:
 
 ```bash
 dotnet restore CS2Turrets/CS2Turrets.csproj
 dotnet build CS2Turrets/CS2Turrets.csproj -c Release
 ```
 
-The repository includes a GitHub Actions build that attempts the same build and publishes `CS2Turrets-server.zip` **only if compilation succeeds**. On GitHub open *Actions → Build CS2Turrets → most recent run → Artifacts*. Do not treat a pushed source commit as a successful compilation.
-
-## Install
-
-If the workflow succeeds, extract `CS2Turrets-server.zip` into `game/csgo/` (or your game content root), preserving `addons/counterstrikesharp/`. Alternatively copy:
+To install, extract the installable ZIP into your server's `game/csgo/` root:
 
 ```text
-CS2Turrets.dll -> game/csgo/addons/counterstrikesharp/plugins/CS2Turrets/CS2Turrets.dll
-CS2Turrets.json -> game/csgo/addons/counterstrikesharp/configs/plugins/CS2Turrets/CS2Turrets.json
+game/csgo/addons/counterstrikesharp/plugins/CS2Turrets/CS2Turrets.dll
+game/csgo/addons/counterstrikesharp/configs/plugins/CS2Turrets/CS2Turrets.json
 ```
 
-Restart the server (or use the CounterStrikeSharp reload command), then check server console for load errors.
-
-**Visible composite model (v0.2.0-preview):** The plugin now spawns *two separate existing CS2 models* at different heights — a supply crate base and an M249 machine gun above it. This is a gameplay visual assembled from existing assets, **not a newly authored Source 2 .vmdl_c**. These paths are references to the installed CS2 game resources, not files provided in this repository. The resource paths are `models/props/crates/csgo_drop_crate_dangerzone.vmdl` and `weapons/models/m249/weapon_mach_m249.vmdl`. If either model does not render, inspect server logs and ensure resources are available; adjust `BaseOffsetZ`, `GunOffsetZ`, `GunOffsetForward`, and `GunPitch` to refine alignment.
-
-Set `UseCompositeVisual` to `false` and set `Model` to a verified model path to use a single model instead. Runtime spawn/visibility on a dedicated CS2 server **has not yet been verified**.
+Restart server. **Change the map after enabling the rocket particle effect**, because particle precaching runs at map startup. Do not install the preview on a production server until you've tested it on a local/private CS2 server.
 
 ## Commands
 
-| Command | Action |
+| Command/key | Function |
 | --- | --- |
-| `G` (bound to `drop`) | Open turret menu / confirm placement |
-| `!turret` | Open turret selection |
-| `!turret_place` | Confirm current placement |
-| `!turret_cancel` | Cancel current placement |
-| `E` (`+use`) | Upgrade your nearby turret |
+| G (bound to `drop`) | Open menu / confirm turret installation |
+| `!turret` | Open turret menu |
+| `!turret_place` | Place selected turret |
+| `!turret_cancel` | Cancel placement |
+| E (bound to `+use`) | Upgrade nearest personally owned turret, up to level 4 |
 
-To avoid stealing default weapon drop, set `InterceptDropKey` to `false` and bind an alternative command (e.g. `bind g "css_turret"`). The server may need to support the command being bound as a client console command. Menu navigation depends on CounterStrikeSharp's current menu controls.
+By default, the plugin intercepts normal weapon dropping for G. Set `InterceptDropKey` to `false` to disable interception and choose another binding. E can conflict with ordinary map `+use` interactions. Read and tune your JSON settings according to your server.
 
-## Known issues / work needed before production
+## Limitations requiring game-server tests
 
-1. GitHub Actions build #4 passed with a DLL and installable ZIP; actual gameplay and server load are not verified. CS2 and CounterStrikeSharp change often.
-2. Trace and model spawning need runtime testing on multiple maps, especially sloped surfaces, collision, visibility, and prop precaching.
-3. Damage is not using Source 2's engine damage system, so kills and hit feedback/score attribution are not correct.
-4. The crate-and-M249 composite does not rotate or animate toward targets; no visible projectiles or muzzle flash in this preview.
-5. G hook intercepts normal weapon dropping and E upgrades can overlap map `+use` interactions.
-6. The internal timer approximates 64 ticks/sec; game ticks can differ. Use the server time API when verified.
-7. This is not a production-ready install-and-play plugin until dedicated-server tests pass; compilation and ZIP packaging now succeed.
+1. **No dedicated-server gameplay validation** yet. Verify entity spawning, model precaching, maps, player hit tracking, and round cleanup.
+2. The upper launcher and flying warhead are *stock asset placeholders*; actual compiled custom missile models and moving launcher animations are still missing.
+3. Player damage directly reduces health. Fatal blows currently invoke `CommitSuicide`; **killer attribution, armor and killfeed may not reflect the turret owner**.
+4. Rocket explosions show a precached particle, but there is no custom sound, rocket trail or sprite flame yet.
+5. Rocket movement and model collision depend on CS2 engine behaviour and may require further tuning after testing.
+6. Timer and entity limits bound server work but have not been FPS-benchmarked on a populated server.
 
 ## Licensing
 
-Project code authored for this repository. Third-party CounterStrikeSharp and game assets retain their licenses.
+Only plugin source code and configuration are included. Valve game models are referenced by resource path and are not redistributed. CounterStrikeSharp retains its respective license.
