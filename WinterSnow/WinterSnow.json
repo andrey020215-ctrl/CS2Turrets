@@ -1,19 +1,8 @@
 {
   "Enabled": true,
   "AdminPermission": "@css/root",
-  "FlakesPerPlayer": 18,
-  "MaxPlayersWithSnow": 8,
-  "SpawnRadius": 700.0,
-  "SpawnHeightMin": 260.0,
-  "SpawnHeightMax": 500.0,
-  "FallSpeedMin": 85.0,
-  "FallSpeedMax": 145.0,
-  "HorizontalDrift": 24.0,
-  "BounceSpeed": 68.0,
-  "BounceCount": 1,
-  "FadeSeconds": 0.42,
-  "TickSeconds": 0.05,
-  "Glyph": "❄",
-  "FontSizeMin": 22.0,
-  "FontSizeMax": 38.0
+  "ParticleEffect": "particles/rain_fx/snow.vpcf",
+  "UpdateSeconds": 0.25,
+  "HeightOffset": 96.0,
+  "MaxPlayersWithSnow": 16
 }
