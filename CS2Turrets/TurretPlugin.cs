@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
+using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 
 namespace CS2Turrets;
@@ -44,6 +45,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 
     private readonly List<Turret> _turrets = new();
     private readonly List<Rocket> _rockets = new();
+    private readonly List<CEnvParticleGlow> _explosions = new();
     private readonly Dictionary<ulong, string> _placing = new();
     private readonly HashSet<ulong> _wasUsing = new();
     private float _nextThink;
@@ -57,6 +59,11 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         AddCommand("css_turret_cancel", "Cancel placement", (p, _) => { if (p != null) _placing.Remove(p.SteamID); });
         if (Config.InterceptDropKey) AddCommandListener("drop", OnDrop);
         RegisterListener<Listeners.OnTick>(OnTick);
+        RegisterListener<Listeners.OnServerPrecacheResources>(manifest =>
+        {
+            if (Config.EnableRocketExplosionEffects && !string.IsNullOrWhiteSpace(Config.RocketExplosionParticle))
+                manifest.AddResource(Config.RocketExplosionParticle);
+        });
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterEventHandler<EventRoundStart>((_, _) => { ClearAll(); return HookResult.Continue; });
         RegisterEventHandler<EventPlayerDisconnect>((e, _) =>
@@ -344,7 +351,43 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             var damage = Math.Max(1, (int)MathF.Round(Math.Clamp(Config.RocketDamage, 1, 250) * factor));
             Damage(player, damage);
         }
+        SpawnExplosion(impact);
         RemoveRocket(rocket);
+    }
+
+
+    private void SpawnExplosion(Vector position)
+    {
+        if (!Config.EnableRocketExplosionEffects ||
+            string.IsNullOrWhiteSpace(Config.RocketExplosionParticle)) return;
+
+        CEnvParticleGlow? particle = null;
+        try
+        {
+            particle = Utilities.CreateEntityByName<CEnvParticleGlow>("env_particle_glow");
+            if (particle == null || !particle.IsValid) return;
+            particle.EffectName = Config.RocketExplosionParticle;
+            particle.Teleport(position, new QAngle(0, 0, 0), null);
+            particle.DispatchSpawn();
+            particle.AcceptInput("Start");
+            _explosions.Add(particle);
+            var effect = particle;
+            AddTimer(Math.Clamp(Config.ExplosionEffectLifetime, .2f, 3f), () =>
+            {
+                if (effect.IsValid)
+                {
+                    try { effect.AcceptInput("DestroyImmediately"); effect.Remove(); }
+                    catch (Exception ex) { Logger.LogWarning(ex, "Failed to stop rocket explosion particle"); }
+                }
+                _explosions.Remove(effect);
+            }, TimerFlags.STOP_ON_MAPCHANGE);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Unable to spawn optional rocket explosion effect");
+            try { if (particle?.IsValid == true) particle.Remove(); }
+            catch { }
+        }
     }
 
     private void RemoveRocket(Rocket rocket)
@@ -465,6 +508,12 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
     private void ClearAll()
     {
         foreach (var rocket in _rockets.ToArray()) RemoveRocket(rocket);
+        foreach (var effect in _explosions.ToArray())
+        {
+            try { if (effect.IsValid) effect.Remove(); }
+            catch (Exception ex) { Logger.LogWarning(ex, "Unable to clean explosion effect"); }
+        }
+        _explosions.Clear();
         foreach (var t in _turrets.ToArray()) Remove(t);
         _placing.Clear(); _wasUsing.Clear(); _nextUpgrade.Clear();
     }
