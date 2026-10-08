@@ -1,30 +1,46 @@
-# CS2Turrets original 3D asset workflow
+# Красная/синяя 3D-турель для CS2Turrets
 
-The 3D authoring package delivered with this project includes original editable GLB meshes for:
+Внешний вид по предоставленным изображениям: на штативе две многоствольные пушки, гибкие патронные ленты, квадратная верхняя секция с четырьмя ракетными отверстиями. Красный корпус относится к **T**, синий — к **CT**.
 
-- `turret_levels_1_3.glb` — base and machine-gun head;
-- `turret_level_4_rocket.glb` — complete fourth-level turret with four rocket tubes;
-- `turret_base_static.glb` — static base;
-- `turret_gun_head.glb` — standalone rotating section;
-- `turret_quad_rocket_pod.glb` — four-tube rocket head;
-- `turret_rocket_projectile.glb` — separate guided-looking but unguided game missile shape.
+Это созданные полигональные GLB-модели, **не** экспорт из готовой игры и не точная копия изображения. Файлы GLB находятся в отдельном исходном архиве из текущей беседы; в репозитории хранятся код плагина и пути к ассетам.
 
-The model package also contains mesh generator source (Python + trimesh), OBJ exports, true-mesh renders and a Blender FBX conversion script.
+| Файл исходной геометрии | Resource path для CS2 | Команда и уровень |
+| --- | --- | --- |
+| `sentry_red_lv1.glb` | `models/cs2turrets/sentry_red_lv1.vmdl` | T, уровни 1–3 |
+| `sentry_blue_lv1.glb` | `models/cs2turrets/sentry_blue_lv1.vmdl` | CT, уровни 1–3 |
+| `sentry_red_lv4.glb` | `models/cs2turrets/sentry_red_lv4.vmdl` | T, уровень 4 |
+| `sentry_blue_lv4.glb` | `models/cs2turrets/sentry_blue_lv4.vmdl` | CT, уровень 4 |
+| `rocket_projectile.glb` | `models/cs2turrets/rocket.vmdl` | снаряд обеих команд |
 
-**These are editable MODEL SOURCES, not compiled Source 2 resources.** Model binary assets are not part of this repository's DLL package. Deploying the plugin alone cannot deliver them to players.
+## Подготовка ассетов
 
-## Prepare for Source 2
+1. Открыть GLB в Blender и проверить геометрию. Приняты оси Z вверх / X вперёд, единицы — метры; для Source 2 может потребоваться масштаб 39.370079 для дюймов.
+2. Экспортировать FBX (или другой поддерживаемый формат) и подготовить PBR-материалы. Цвета в исходнике заданы через vertex colors и могут потребовать отдельного материала в ModelDoc.
+3. В **Counter-Strike 2 Workshop Tools / ModelDoc** собрать модели с вышеуказанными путями. Создать `.vmdl_c`, необходимые материалы, при необходимости физику и hitbox.
+4. Добавить игровые ассеты в распространяемый CS2 addon и обеспечить загрузку на клиенте каждого игрока. **Серверная DLL не включает ассеты автоматически.**
+5. Только после выполнения шагов 1–4 в `game/csgo/addons/counterstrikesharp/configs/plugins/CS2Turrets/CS2Turrets.json` установить:
 
-1. Import the GLB files into Blender. The procedural models are oriented **+X forward, +Z up**, in meters.
-2. Export to FBX with matching axes; as needed scale by about `39.370079` to convert meters to Source 2 inches. Confirm final size in ModelDoc.
-3. Open CS2 Workshop Tools / ModelDoc to import and compile 3 models and corresponding materials:
-   - `models/cs2turrets/turret_lv1.vmdl` from `turret_levels_1_3`
-   - `models/cs2turrets/turret_lv4.vmdl` from `turret_level_4_rocket`
-   - `models/cs2turrets/rocket.vmdl` from `turret_rocket_projectile`
-4. Distribute **compiled models/materials** through a CS2 addon that both clients and server load.
-5. Only then set `UseCustomTurretModel` to `true` in `addons/counterstrikesharp/configs/plugins/CS2Turrets/CS2Turrets.json`. Ensure all three custom paths match your compiled resource paths.
-6. Restart and change the map, then test placements, level-4 model swaps, missile visuals, hit effects and client downloads.
+```json
+{
+  "UseCustomTurretModel": true,
+  "UseTeamSkins": true
+}
+```
 
-The plugin retains `UseCustomTurretModel=false` by default so it can still run with its older built-in game-prop placeholders. The GLB source files are **not** dynamically loaded by CounterStrikeSharp, and the DLL compiling successfully is not a test that models display in CS2.
+Не заменяйте весь JSON этим фрагментом: измените соответствующие существующие поля.
 
-Animated rotation, launch recoil and reload timing still require a Source 2 animation setup and corresponding plugin control; the supplied GLB meshes are static but have separately exportable subassemblies.
+6. Перезапустить сервер, сменить карту, проверить консоль на missing model/material, затем проверить обе команды и переключение уровня 4.
+
+## Как работает плагин
+
+- T размещает красную модель и улучшает её до красной ракетной.
+- CT размещает синюю и улучшает её до синей ракетной.
+- Меню G и улучшение E не изменяются.
+- Для красного и синего варианта используется общий управляемый ракетный снаряд, а эффекты взрыва сохраняются.
+- `UseCustomTurretModel` по умолчанию **false**, чтобы отсутствие собранных моделей не приводило к незаметной модели или ошибкам.
+
+## Что ещё не проверено
+
+- Настоящая компиляция моделей Source 2, загрузка клиентами и рендер в реальном CS2.
+- Точное совпадение с изображением: модель создана как стилизация по 2D-референсу.
+- FPS, в том числе анимация вращения, движения патронной ленты и отдача. GLB содержит статические геометрические объекты.
