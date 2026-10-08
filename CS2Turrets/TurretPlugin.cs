@@ -14,7 +14,7 @@ namespace CS2Turrets;
 public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 {
     public override string ModuleName => "CS2 Turrets";
-    public override string ModuleVersion => "0.1.0-preview";
+    public override string ModuleVersion => "0.2.0-preview";
     public override string ModuleAuthor => "CS2Turrets";
     public override string ModuleDescription => "Place, upgrade and automate team turrets";
     public TurretConfig Config { get; set; } = new();
@@ -28,7 +28,8 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         public required Vector Position;
         public int Level = 1;
         public float NextShot;
-        public CBaseModelEntity? Prop;
+        public float Yaw;
+        public readonly List<CBaseModelEntity> Visuals = new();
     }
 
     private readonly List<Turret> _turrets = new();
@@ -110,30 +111,61 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         if (_turrets.Any(t => Distance(t.Position, hit) < Config.MinimumTurretSpacing))
         { p.PrintToChat("[Turrets] Too close to another turret."); return; }
 
-        // The model is optional so a missing model never blocks turret gameplay.
+        var turret = new Turret
+        {
+            Owner = p.SteamID,
+            Team = p.Team,
+            Kind = kind,
+            Position = new Vector(hit.X, hit.Y, hit.Z),
+            Yaw = a.Y
+        };
+        SpawnVisuals(turret);
+        _turrets.Add(turret);
+        _placing.Remove(p.SteamID);
+        p.PrintToChat("[Turrets] " + kind + " placed! Press E nearby to upgrade.");
+    }
+
+    // Uses two stock CS2 models. Both props are tracked for cleanup.
+    private void SpawnVisuals(Turret turret)
+    {
+        if (Config.UseCompositeVisual)
+        {
+            TrySpawnVisual(turret, Config.BaseModel,
+                new Vector(turret.Position.X, turret.Position.Y, turret.Position.Z + Config.BaseOffsetZ),
+                new QAngle(0, turret.Yaw, 0));
+
+            var angleRadians = turret.Yaw * MathF.PI / 180f;
+            TrySpawnVisual(turret, Config.GunModel,
+                new Vector(
+                    turret.Position.X + MathF.Cos(angleRadians) * Config.GunOffsetForward,
+                    turret.Position.Y + MathF.Sin(angleRadians) * Config.GunOffsetForward,
+                    turret.Position.Z + Config.GunOffsetZ),
+                new QAngle(Config.GunPitch, turret.Yaw, 0));
+        }
+        else
+        {
+            TrySpawnVisual(turret, Config.Model, turret.Position, new QAngle(0, turret.Yaw, 0));
+        }
+    }
+
+    private void TrySpawnVisual(Turret turret, string model, Vector position, QAngle rotation)
+    {
+        if (string.IsNullOrWhiteSpace(model)) return;
         CBaseModelEntity? prop = null;
         try
         {
-            if (!string.IsNullOrWhiteSpace(Config.Model))
-            {
-                prop = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-                if (prop != null && prop.IsValid)
-                {
-                    prop.SetModel(Config.Model);
-                    prop.Teleport(hit, new QAngle(0, a.Y, 0), null);
-                    prop.DispatchSpawn();
-                }
-            }
+            prop = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
+            if (prop == null || !prop.IsValid) return;
+            prop.SetModel(model);
+            prop.Teleport(position, rotation, null);
+            prop.DispatchSpawn();
+            turret.Visuals.Add(prop);
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Turret prop could not be created; using logical turret only");
-            prop = null;
+            Logger.LogWarning(ex, "Failed to spawn turret model {Model}", model);
+            if (prop != null && prop.IsValid) prop.Remove();
         }
-        _turrets.Add(new Turret { Owner = p.SteamID, Team = p.Team, Kind = kind,
-            Position = new Vector(hit.X, hit.Y, hit.Z), Prop = prop });
-        _placing.Remove(p.SteamID);
-        p.PrintToChat("[Turrets] " + kind + " placed! Press E nearby to upgrade.");
     }
 
     private void OnTick()
@@ -218,8 +250,12 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 
     private void Remove(Turret turret)
     {
-        try { if (turret.Prop != null && turret.Prop.IsValid) turret.Prop.Remove(); }
-        catch (Exception ex) { Logger.LogWarning(ex, "Unable to remove turret prop"); }
+        foreach (var prop in turret.Visuals)
+        {
+            try { if (prop.IsValid) prop.Remove(); }
+            catch (Exception ex) { Logger.LogWarning(ex, "Unable to remove turret visual"); }
+        }
+        turret.Visuals.Clear();
         _turrets.Remove(turret);
     }
 
