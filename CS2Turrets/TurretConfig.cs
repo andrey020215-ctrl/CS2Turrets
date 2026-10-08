@@ -28,6 +28,15 @@ public sealed class TurretConfig : BasePluginConfig
     [JsonPropertyName("CustomRocketModel")] public string CustomRocketModel { get; set; } = "models/cs2turrets/turret_lv4.vmdl";
     [JsonPropertyName("CustomProjectileModel")] public string CustomProjectileModel { get; set; } = "models/cs2turrets/rocket.vmdl";
 
+    // Model variants corresponding to actual GLB source meshes in the separate asset pack.
+    // Requires compiled .vmdl_c, materials and client-side delivery before enabling.
+    [JsonPropertyName("UseTeamSkins")] public bool UseTeamSkins { get; set; } = true;
+    [JsonPropertyName("TerroristStandardModel")] public string TerroristStandardModel { get; set; } = "models/cs2turrets/sentry_red_lv1.vmdl";
+    [JsonPropertyName("CounterTerroristStandardModel")] public string CounterTerroristStandardModel { get; set; } = "models/cs2turrets/sentry_blue_lv1.vmdl";
+    [JsonPropertyName("TerroristRocketModel")] public string TerroristRocketModel { get; set; } = "models/cs2turrets/sentry_red_lv4.vmdl";
+    [JsonPropertyName("CounterTerroristRocketModel")] public string CounterTerroristRocketModel { get; set; } = "models/cs2turrets/sentry_blue_lv4.vmdl";
+
+
     [JsonPropertyName("BaseModel")] public string BaseModel { get; set; } = "models/props/crates/csgo_drop_crate_dangerzone.vmdl";
     [JsonPropertyName("GunModel")] public string GunModel { get; set; } = "weapons/models/m249/weapon_mach_m249.vmdl";
     [JsonPropertyName("BaseOffsetZ")] public float BaseOffsetZ { get; set; } = -2f;
