@@ -15,7 +15,7 @@ namespace CS2Turrets;
 public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 {
     public override string ModuleName => "CS2 Turrets";
-    public override string ModuleVersion => "0.4.0-preview";
+    public override string ModuleVersion => "0.5.0-preview";
     public override string ModuleAuthor => "CS2Turrets";
     public override string ModuleDescription => "Place, upgrade and automate team turrets";
     public TurretConfig Config { get; set; } = new();
@@ -63,9 +63,20 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         {
             if (Config.UseCustomTurretModel)
             {
-                manifest.AddResource(Config.CustomStandardModel);
-                manifest.AddResource(Config.CustomRocketModel);
-                manifest.AddResource(Config.CustomProjectileModel);
+                // Both teams' models must be precached even if only one team is online.
+                if (Config.UseTeamSkins)
+                {
+                    PrecacheIfSet(manifest, Config.TerroristStandardModel);
+                    PrecacheIfSet(manifest, Config.CounterTerroristStandardModel);
+                    PrecacheIfSet(manifest, Config.TerroristRocketModel);
+                    PrecacheIfSet(manifest, Config.CounterTerroristRocketModel);
+                }
+                else
+                {
+                    PrecacheIfSet(manifest, Config.CustomStandardModel);
+                    PrecacheIfSet(manifest, Config.CustomRocketModel);
+                }
+                PrecacheIfSet(manifest, Config.CustomProjectileModel);
             }
             if (Config.EnableRocketExplosionEffects && !string.IsNullOrWhiteSpace(Config.RocketExplosionParticle))
                 manifest.AddResource(Config.RocketExplosionParticle);
@@ -77,6 +88,23 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             if (e.Userid != null) RemoveOwner(e.Userid.SteamID);
             return HookResult.Continue;
         });
+    }
+
+    private static void PrecacheIfSet(CounterStrikeSharp.API.Modules.Resources.ResourceManifest manifest, string path)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+            manifest.AddResource(path);
+    }
+
+    // Team choice is fixed when the player places the turret.
+    private string GetCustomModel(CsTeam team, int level)
+    {
+        var isRocket = level >= Config.RocketLevel;
+        if (!Config.UseTeamSkins)
+            return isRocket ? Config.CustomRocketModel : Config.CustomStandardModel;
+        return team == CsTeam.Terrorist
+            ? (isRocket ? Config.TerroristRocketModel : Config.TerroristStandardModel)
+            : (isRocket ? Config.CounterTerroristRocketModel : Config.CounterTerroristStandardModel);
     }
 
     private HookResult OnDrop(CCSPlayerController? player, CommandInfo command)
@@ -154,7 +182,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
     {
         if (Config.UseCustomTurretModel)
         {
-            TrySpawnVisual(turret, Config.CustomStandardModel,
+            TrySpawnVisual(turret, GetCustomModel(turret.Team, turret.Level),
                 turret.Position, new QAngle(0, turret.Yaw, 0));
             return;
         }
@@ -495,7 +523,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             if (Config.UseCustomTurretModel)
             {
                 ClearTurretVisuals(turret);
-                TrySpawnVisual(turret, Config.CustomRocketModel,
+                TrySpawnVisual(turret, GetCustomModel(turret.Team, turret.Level),
                     turret.Position, new QAngle(0, turret.Yaw, 0));
             }
             else
