@@ -24,3 +24,4 @@ jobs:
         with:
           name: WinterSnow-Ready
           path: package
+# rebuild after source fix
