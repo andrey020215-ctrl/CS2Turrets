@@ -1,0 +1,36 @@
+name: Build HanTurretS2 Rocket Upgrades (Swiftly2)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/hanturret-swiftly2-rockets
+    paths:
+      - 'HanTurretS2Kit/**'
+      - '.github/workflows/build-hanturret.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Extract source kit and check patch
+        working-directory: HanTurretS2Kit
+        run: |
+          base64 --decode kit.tar.gz.b64 | tar xz
+          python3 tests/test_patch_kit.py
+      - name: Clone upstream, patch and compile
+        working-directory: HanTurretS2Kit
+        run: bash BUILD_LINUX.sh
+      - name: Upload server installation archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: HanTurretS2-CS2-INSTALL
+          path: HanTurretS2Kit/HanTurretS2_CS2_INSTALL.zip
+          if-no-files-found: error
