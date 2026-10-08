@@ -1,0 +1,19 @@
+{
+  "ConfigVersion": 1,
+  "Enabled": true,
+  "InterceptDropKey": true,
+  "AllowBotsAsTargets": true,
+  "MaxTurretsPerPlayer": 2,
+  "MaxTurretsPerTeam": 12,
+  "MaxPlacementDistance": 320,
+  "MinimumTurretSpacing": 95,
+  "UpgradeDistance": 120,
+  "TargetCheckInterval": 0.15,
+  "MaxLevel": 3,
+  "DamagePerLevelBonus": 4,
+  "RangePerLevelBonus": 100,
+  "UpgradeCooldownSeconds": 2,
+  "Model": "models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_32.vmdl",
+  "Rapid": { "Damage": 9, "Range": 750, "FireInterval": 0.38 },
+  "Heavy": { "Damage": 22, "Range": 600, "FireInterval": 1.05 }
+}
