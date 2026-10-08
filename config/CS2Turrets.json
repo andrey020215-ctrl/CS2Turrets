@@ -53,5 +53,10 @@
   "UseCustomTurretModel": false,
   "CustomStandardModel": "models/cs2turrets/turret_lv1.vmdl",
   "CustomRocketModel": "models/cs2turrets/turret_lv4.vmdl",
-  "CustomProjectileModel": "models/cs2turrets/rocket.vmdl"
+  "CustomProjectileModel": "models/cs2turrets/rocket.vmdl",
+  "UseTeamSkins": true,
+  "TerroristStandardModel": "models/cs2turrets/sentry_red_lv1.vmdl",
+  "CounterTerroristStandardModel": "models/cs2turrets/sentry_blue_lv1.vmdl",
+  "TerroristRocketModel": "models/cs2turrets/sentry_red_lv4.vmdl",
+  "CounterTerroristRocketModel": "models/cs2turrets/sentry_blue_lv4.vmdl"
 }
