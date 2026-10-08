@@ -1,0 +1,29 @@
+name: Build SwiftAdminMenu
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [wintersnow-ready]
+    paths:
+      - 'SwiftAdminMenu/**'
+      - '.github/workflows/swiftadminmenu-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish
+        run: dotnet publish SwiftAdminMenu/SwiftAdminMenu.csproj -c Release -o out
+      - name: Package
+        run: |
+          mkdir -p package/SwiftAdminMenu
+          cp out/SwiftAdminMenu.dll package/SwiftAdminMenu/
+          if [ -f out/SwiftAdminMenu.deps.json ]; then cp out/SwiftAdminMenu.deps.json package/SwiftAdminMenu/; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SwiftAdminMenu-Ready
+          path: package/
