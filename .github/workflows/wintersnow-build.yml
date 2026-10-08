@@ -1,0 +1,26 @@
+name: Build WinterSnow Ready
+on:
+  push:
+    branches: [wintersnow-ready]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build
+        run: dotnet publish WinterSnow/WinterSnow.csproj -c Release -o out
+      - name: Package
+        run: |
+          mkdir -p package/game/csgo/addons/counterstrikesharp/plugins/WinterSnow
+          mkdir -p package/game/csgo/addons/counterstrikesharp/configs/plugins/WinterSnow
+          cp out/WinterSnow.dll package/game/csgo/addons/counterstrikesharp/plugins/WinterSnow/
+          cp out/WinterSnow.deps.json package/game/csgo/addons/counterstrikesharp/plugins/WinterSnow/
+          cp WinterSnow/WinterSnow.json package/game/csgo/addons/counterstrikesharp/configs/plugins/WinterSnow/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WinterSnow-Ready
+          path: package
