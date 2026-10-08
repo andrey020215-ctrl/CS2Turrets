@@ -1,0 +1,15 @@
+{
+  "AdminPermission": "@css/root",
+  "Maps": [
+    { "Name": "❄ Dust2 Christmas", "Type": "workshop", "Value": "3620630831" },
+    { "Name": "❄ Mirage Winter", "Type": "workshop", "Value": "3359123851" },
+    { "Name": "Dust II", "Type": "standard", "Value": "de_dust2" },
+    { "Name": "Mirage", "Type": "standard", "Value": "de_mirage" },
+    { "Name": "Inferno", "Type": "standard", "Value": "de_inferno" },
+    { "Name": "Nuke", "Type": "standard", "Value": "de_nuke" },
+    { "Name": "Ancient", "Type": "standard", "Value": "de_ancient" },
+    { "Name": "Anubis", "Type": "standard", "Value": "de_anubis" },
+    { "Name": "Train", "Type": "standard", "Value": "de_train" },
+    { "Name": "Overpass", "Type": "standard", "Value": "de_overpass" }
+  ]
+}
