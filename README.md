@@ -1,6 +1,6 @@
 # CS2Turrets — CounterStrikeSharp
 
-> **Preview / experimental implementation.** Written against CounterStrikeSharp API, but **not yet proven to compile or function on a live CS2 server**. Check GitHub Actions before deploying, and test on a private server. The `Damage` routine directly changes HP; kills use `CommitSuicide` and do not credit the turret owner.
+> **Preview / experimental implementation.** Compiled successfully on GitHub Actions ([successful run #4](https://github.com/andrey020215-ctrl/CS2Turrets/actions/runs/37741738204)) against CounterStrikeSharp.API 1.0.376 and .NET 10. **Live CS2 gameplay has not been tested.** Test on a private server before production. The `Damage` routine directly changes HP; kills use `CommitSuicide` and do not credit the turret owner.
 
 ## Gameplay
 
@@ -53,13 +53,13 @@ To avoid stealing default weapon drop, set `InterceptDropKey` to `false` and bin
 
 ## Known issues / work needed before production
 
-1. Build status has not been verified yet. CS2 and CounterStrikeSharp change often.
+1. GitHub Actions build #4 passed with a DLL and installable ZIP; actual gameplay and server load are not verified. CS2 and CounterStrikeSharp change often.
 2. Trace and model spawning need runtime testing on multiple maps, especially sloped surfaces, collision, visibility, and prop precaching.
 3. Damage is not using Source 2's engine damage system, so kills and hit feedback/score attribution are not correct.
 4. Models do not rotate or animate toward targets; no visible projectiles or muzzle flash in this preview.
 5. G hook intercepts normal weapon dropping and E upgrades can overlap map `+use` interactions.
 6. The internal timer approximates 64 ticks/sec; game ticks can differ. Use the server time API when verified.
-7. This is not a finished install-and-play plugin until CI is green and dedicated-server tests pass.
+7. This is not a production-ready install-and-play plugin until dedicated-server tests pass; compilation now succeeds.
 
 ## Licensing
 
