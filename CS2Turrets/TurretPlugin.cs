@@ -179,6 +179,82 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         }
     }
 
+
+    private static Vector ForwardOffset(Vector origin, float yaw, float forward, float up)
+    {
+        var a = yaw * MathF.PI / 180f;
+        return new Vector(origin.X + MathF.Cos(a) * forward,
+            origin.Y + MathF.Sin(a) * forward, origin.Z + up);
+    }
+
+    // A temporary stock-game grenade mesh represents the missile's warhead.
+    private void AddRocketLauncher(Turret turret)
+    {
+        if (!Config.UseCompositeVisual) return;
+        TrySpawnVisual(turret, Config.RocketLauncherModel,
+            ForwardOffset(turret.Position, turret.Yaw, 0, Config.RocketLauncherHeight),
+            new QAngle(0, turret.Yaw, 0));
+        TrySpawnVisual(turret, Config.RocketVisualModel,
+            ForwardOffset(turret.Position, turret.Yaw, Config.LoadedRocketForward, Config.LoadedRocketHeight),
+            new QAngle(0, turret.Yaw, 0));
+    }
+
+    private static Vector Normalize(Vector delta)
+    {
+        var length = MathF.Sqrt(delta.X * delta.X + delta.Y * delta.Y + delta.Z * delta.Z);
+        return length < .01f ? new Vector(1, 0, 0)
+            : new Vector(delta.X / length, delta.Y / length, delta.Z / length);
+    }
+
+    private static QAngle AimRotation(Vector direction)
+    {
+        var yaw = MathF.Atan2(direction.Y, direction.X) * (180f / MathF.PI);
+        var horizontal = MathF.Sqrt(direction.X * direction.X + direction.Y * direction.Y);
+        return new QAngle(-MathF.Atan2(direction.Z, horizontal) * (180f / MathF.PI), yaw, 0);
+    }
+
+    private void LaunchRocket(Turret turret, CCSPlayerController target)
+    {
+        if (_rockets.Count >= Math.Clamp(Config.MaxActiveRockets, 0, 128)) return;
+        var enemy = target.PlayerPawn.Value?.AbsOrigin;
+        if (enemy == null) return;
+        var start = ForwardOffset(turret.Position, turret.Yaw, Config.RocketSpawnForward, Config.RocketSpawnHeight);
+        var targetPoint = new Vector(enemy.X, enemy.Y, enemy.Z + 36);
+        var direction = Normalize(new Vector(targetPoint.X - start.X, targetPoint.Y - start.Y, targetPoint.Z - start.Z));
+
+        var rocket = new Rocket
+        {
+            Owner = turret.Owner,
+            Team = turret.Team,
+            Position = start,
+            Direction = direction,
+            ExpiresAt = _clock + Math.Clamp(Config.RocketLifeSeconds, .25f, 10f)
+        };
+
+        CBaseModelEntity? prop = null;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Config.RocketVisualModel))
+            {
+                prop = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
+                if (prop != null && prop.IsValid)
+                {
+                    prop.SetModel(Config.RocketVisualModel);
+                    prop.Teleport(start, AimRotation(direction), null);
+                    prop.DispatchSpawn();
+                    rocket.Visual = prop;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Unable to create projectile model");
+            try { if (prop?.IsValid == true) prop.Remove(); }
+            catch { }
+        }
+        _rockets.Add(rocket);
+    }
+
     private void OnTick()
     {
         if (!Config.Enabled) return;
