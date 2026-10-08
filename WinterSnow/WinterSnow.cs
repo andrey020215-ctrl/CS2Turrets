@@ -155,7 +155,7 @@ public sealed class WinterSnowPlugin : BasePlugin, IPluginConfig<WinterSnowConfi
         // Explicit start is useful on late-created particle systems.
         p.AcceptInput("Start", p, p, "", 0);
 
-        Logger.LogInformation("WinterSnow emitter created: entity={EntityIndex}, effect={Effect}", p.EntityIndex, Config.ParticleEffect);
+        Logger.LogInformation("WinterSnow emitter created: entity={EntityIndex}, effect={Effect}", p.Index, Config.ParticleEffect);
         return p;
     }
 
