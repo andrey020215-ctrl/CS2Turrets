@@ -16,7 +16,7 @@ namespace SwiftAdminMenu;
     Description = "Compact SwiftlyS2 admin menu for maps, turret menu and 60-minute test round")]
 public sealed class SwiftAdminMenu : BasePlugin
 {
-    private const string WinterDust2Workshop = "3619971469";
+    private const string SnowyNukeWorkshop = "3332835593";
 
     public SwiftAdminMenu(ISwiftlyCore core) : base(core) { }
 
@@ -44,7 +44,7 @@ public sealed class SwiftAdminMenu : BasePlugin
         var builder = Core.MenusAPI.CreateBuilder();
         builder.Design.SetMenuTitle("SERVER ADMIN");
 
-        AddAction(builder, "❄ Winter Dust2", player, () => RunServerCommand($"host_workshop_map {WinterDust2Workshop}"));
+        AddAction(builder, "❄ Snowy Nuke", player, () => RunServerCommand($"host_workshop_map {SnowyNukeWorkshop}"));
         AddAction(builder, "Nuke", player, () => RunServerCommand("changelevel de_nuke"));
         AddAction(builder, "Inferno", player, () => RunServerCommand("changelevel de_inferno"));
         AddAction(builder, "Mirage", player, () => RunServerCommand("changelevel de_mirage"));
