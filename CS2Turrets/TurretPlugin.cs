@@ -14,7 +14,7 @@ namespace CS2Turrets;
 public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 {
     public override string ModuleName => "CS2 Turrets";
-    public override string ModuleVersion => "0.2.0-preview";
+    public override string ModuleVersion => "0.3.0-preview";
     public override string ModuleAuthor => "CS2Turrets";
     public override string ModuleDescription => "Place, upgrade and automate team turrets";
     public TurretConfig Config { get; set; } = new();
@@ -32,7 +32,18 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         public readonly List<CBaseModelEntity> Visuals = new();
     }
 
+    private sealed class Rocket
+    {
+        public required ulong Owner;
+        public required CsTeam Team;
+        public required Vector Position;
+        public required Vector Direction;
+        public float ExpiresAt;
+        public CBaseModelEntity? Visual;
+    }
+
     private readonly List<Turret> _turrets = new();
+    private readonly List<Rocket> _rockets = new();
     private readonly Dictionary<ulong, string> _placing = new();
     private readonly HashSet<ulong> _wasUsing = new();
     private float _nextThink;
@@ -171,7 +182,8 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
     private void OnTick()
     {
         if (!Config.Enabled) return;
-        _clock += 1f / 64f;
+        _clock = Server.CurrentTime;
+        AdvanceRockets();
         foreach (var player in Utilities.GetPlayers().Where(Usable))
         {
             bool isUsing = (player.Buttons & PlayerButtons.Use) != 0;
@@ -194,8 +206,17 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
                 .OrderBy(p => Distance(turret.Position, p.PlayerPawn.Value!.AbsOrigin!))
                 .FirstOrDefault(p => Visible(turret, p));
             if (target == null) continue;
-            turret.NextShot = _clock + Math.Max(0.15f, stats.FireInterval);
-            Damage(target, Math.Max(1, stats.Damage + (turret.Level - 1) * Config.DamagePerLevelBonus));
+            if (turret.Level >= Math.Max(2, Config.RocketLevel))
+            {
+                if (_rockets.Count >= Math.Clamp(Config.MaxActiveRockets, 0, 128)) continue;
+                turret.NextShot = _clock + Math.Clamp(Config.RocketFireInterval, .3f, 15f);
+                LaunchRocket(turret, target);
+            }
+            else
+            {
+                turret.NextShot = _clock + Math.Max(0.15f, stats.FireInterval);
+                Damage(target, Math.Max(1, stats.Damage + (turret.Level - 1) * Config.DamagePerLevelBonus));
+            }
         }
     }
 
@@ -232,6 +253,12 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             .OrderBy(t => Distance(t.Position, pos)).FirstOrDefault();
         if (turret == null) return;
         turret.Level++;
+        if (turret.Level == Config.RocketLevel)
+        {
+            AddRocketLauncher(turret);
+            turret.NextShot = _clock + 1f;
+            p.PrintToChat("[Turrets] ROCKET LAUNCHER activated! Level 4 fires splash rockets.");
+        }
         _nextUpgrade[p.SteamID] = _clock + Math.Max(.5f, Config.UpgradeCooldownSeconds);
         p.PrintToChat($"[Turrets] Upgraded {turret.Kind} to level {turret.Level}/{Config.MaxLevel}.");
     }
@@ -245,6 +272,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
     private void RemoveOwner(ulong steam)
     {
         foreach (var turret in _turrets.Where(t => t.Owner == steam).ToList()) Remove(turret);
+        foreach (var rocket in _rockets.Where(r => r.Owner == steam).ToArray()) RemoveRocket(rocket);
         _placing.Remove(steam); _wasUsing.Remove(steam); _nextUpgrade.Remove(steam);
     }
 
@@ -261,6 +289,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 
     private void ClearAll()
     {
+        foreach (var rocket in _rockets.ToArray()) RemoveRocket(rocket);
         foreach (var t in _turrets.ToArray()) Remove(t);
         _placing.Clear(); _wasUsing.Clear(); _nextUpgrade.Clear();
     }
