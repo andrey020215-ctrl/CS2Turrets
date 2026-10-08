@@ -1,0 +1,29 @@
+name: Build AdminMapMenu
+on:
+  push:
+    branches: [wintersnow-ready]
+    paths:
+      - 'AdminMapMenu/**'
+      - '.github/workflows/adminmapmenu-build.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build
+        run: dotnet publish AdminMapMenu/AdminMapMenu.csproj -c Release -o out
+      - name: Package
+        run: |
+          mkdir -p package/game/csgo/addons/counterstrikesharp/plugins/AdminMapMenu
+          mkdir -p package/game/csgo/addons/counterstrikesharp/configs/plugins/AdminMapMenu
+          cp out/AdminMapMenu.dll package/game/csgo/addons/counterstrikesharp/plugins/AdminMapMenu/
+          cp out/AdminMapMenu.deps.json package/game/csgo/addons/counterstrikesharp/plugins/AdminMapMenu/
+          cp AdminMapMenu/AdminMapMenu.json package/game/csgo/addons/counterstrikesharp/configs/plugins/AdminMapMenu/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AdminMapMenu-Ready
+          path: package
