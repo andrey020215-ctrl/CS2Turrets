@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace CS2Turrets;
 
@@ -102,8 +103,8 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         var destination = new Vector(pos.X + (float)(Math.Cos(yaw) * horizontal),
             pos.Y + (float)(Math.Sin(yaw) * horizontal), pos.Z + 64f - (float)(Math.Sin(pitch) * Config.MaxPlacementDistance));
         var eye = new Vector(pos.X, pos.Y, pos.Z + 64f);
-        var trace = Trace.TraceRay(eye, destination, pawn);
-        if (!trace.DidHit)
+        var trace = Trace.TraceEndShape(eye, destination, pawn);
+        if (!trace.DidHit() || trace.Normal.Z < 0.65f)
         { p.PrintToChat("[Turrets] Aim at a nearby solid surface."); return; }
         var hit = trace.EndPos;
         if (_turrets.Any(t => Distance(t.Position, hit) < Config.MinimumTurretSpacing))
@@ -172,8 +173,8 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         if (pawn?.AbsOrigin == null) return false;
         var start = new Vector(turret.Position.X, turret.Position.Y, turret.Position.Z + 30);
         var end = new Vector(pawn.AbsOrigin.X, pawn.AbsOrigin.Y, pawn.AbsOrigin.Z + 36);
-        var ray = Trace.TraceRay(start, end);
-        return !ray.DidHit || Distance(ray.EndPos, end) < 52;
+        var ray = Trace.TraceEndShape(start, end);
+        return !ray.DidHit() || Distance(ray.EndPos, end) < 52;
     }
 
     private static void Damage(CCSPlayerController p, int damage)
