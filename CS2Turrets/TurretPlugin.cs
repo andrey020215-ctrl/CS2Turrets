@@ -15,7 +15,7 @@ namespace CS2Turrets;
 public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
 {
     public override string ModuleName => "CS2 Turrets";
-    public override string ModuleVersion => "0.3.0-preview";
+    public override string ModuleVersion => "0.4.0-preview";
     public override string ModuleAuthor => "CS2Turrets";
     public override string ModuleDescription => "Place, upgrade and automate team turrets";
     public TurretConfig Config { get; set; } = new();
@@ -61,6 +61,12 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnServerPrecacheResources>(manifest =>
         {
+            if (Config.UseCustomTurretModel)
+            {
+                manifest.AddResource(Config.CustomStandardModel);
+                manifest.AddResource(Config.CustomRocketModel);
+                manifest.AddResource(Config.CustomProjectileModel);
+            }
             if (Config.EnableRocketExplosionEffects && !string.IsNullOrWhiteSpace(Config.RocketExplosionParticle))
                 manifest.AddResource(Config.RocketExplosionParticle);
         });
@@ -146,6 +152,12 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
     // Uses two stock CS2 models. Both props are tracked for cleanup.
     private void SpawnVisuals(Turret turret)
     {
+        if (Config.UseCustomTurretModel)
+        {
+            TrySpawnVisual(turret, Config.CustomStandardModel,
+                turret.Position, new QAngle(0, turret.Yaw, 0));
+            return;
+        }
         if (Config.UseCompositeVisual)
         {
             TrySpawnVisual(turret, Config.BaseModel,
@@ -246,12 +258,14 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         CBaseModelEntity? prop = null;
         try
         {
-            if (!string.IsNullOrWhiteSpace(Config.RocketVisualModel))
+            var rocketModel = Config.UseCustomTurretModel
+                ? Config.CustomProjectileModel : Config.RocketVisualModel;
+            if (!string.IsNullOrWhiteSpace(rocketModel))
             {
                 prop = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
                 if (prop != null && prop.IsValid)
                 {
-                    prop.SetModel(Config.RocketVisualModel);
+                    prop.SetModel(rocketModel);
                     prop.Teleport(start, AimRotation(direction), null);
                     prop.DispatchSpawn();
                     rocket.Visual = prop;
@@ -478,7 +492,16 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         turret.Level++;
         if (turret.Level == Config.RocketLevel)
         {
-            AddRocketLauncher(turret);
+            if (Config.UseCustomTurretModel)
+            {
+                ClearTurretVisuals(turret);
+                TrySpawnVisual(turret, Config.CustomRocketModel,
+                    turret.Position, new QAngle(0, turret.Yaw, 0));
+            }
+            else
+            {
+                AddRocketLauncher(turret);
+            }
             turret.NextShot = _clock + 1f;
             p.PrintToChat("[Turrets] ROCKET LAUNCHER activated! Level 4 fires splash rockets.");
         }
@@ -499,14 +522,19 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         _placing.Remove(steam); _wasUsing.Remove(steam); _nextUpgrade.Remove(steam);
     }
 
-    private void Remove(Turret turret)
+    private void ClearTurretVisuals(Turret turret)
     {
-        foreach (var prop in turret.Visuals)
+        foreach (var prop in turret.Visuals.ToArray())
         {
             try { if (prop.IsValid) prop.Remove(); }
-            catch (Exception ex) { Logger.LogWarning(ex, "Unable to remove turret visual"); }
+            catch (Exception ex) { Logger.LogWarning(ex, "Unable to remove custom turret model"); }
         }
         turret.Visuals.Clear();
+    }
+
+    private void Remove(Turret turret)
+    {
+        ClearTurretVisuals(turret);
         _turrets.Remove(turret);
     }
 
