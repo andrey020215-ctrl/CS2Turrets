@@ -47,6 +47,11 @@ public sealed class WinterSnowPlugin : BasePlugin, IPluginConfig<WinterSnowConfi
     public override void Load(bool hotReload)
     {
         _enabled = Config.Enabled;
+        RegisterListener<Listeners.OnServerPrecacheResources>(manifest =>
+        {
+            manifest.AddResource(Config.ParticleEffect);
+            Logger.LogInformation("WinterSnow precached: {Effect}", Config.ParticleEffect);
+        });
         RegisterListener<Listeners.OnMapStart>(_ => Restart());
         Restart();
         Logger.LogInformation("WinterSnow Source2 v2.0.0 loaded. Effect: {Effect}", Config.ParticleEffect);
