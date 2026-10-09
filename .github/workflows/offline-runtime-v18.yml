@@ -1,0 +1,30 @@
+name: Build Offline Runtime v18
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [wintersnow-ready]
+    paths:
+      - '.github/workflows/offline-runtime-v18.yml'
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned Windows runtimes
+        run: |
+          set -euxo pipefail
+          mkdir -p offline
+          curl -fL --retry 4 --retry-delay 3 -o offline/metamod.zip "https://mms.alliedmods.net/mmsdrop/2.0/mmsource-2.0.0-git1473-windows.zip"
+          curl -fL --retry 4 --retry-delay 3 -o offline/swiftlys2.zip "https://github.com/swiftly-solution/swiftlys2/releases/download/v1.4.13/swiftlys2-windows-v1.4.13-with-runtimes.zip"
+          curl -fL --retry 4 --retry-delay 3 -o offline/counterstrikesharp.zip "https://github.com/roflmuffin/CounterStrikeSharp/releases/download/v1.0.376/counterstrikesharp-with-runtime-windows-1.0.376.zip"
+          curl -fL --retry 4 --retry-delay 3 -o offline/multiaddonmanager.zip "https://github.com/Source2ZE/MultiAddonManager/releases/download/v1.6.2/MultiAddonManager-v1.6.2-windows.zip"
+          for f in offline/*.zip; do unzip -t "$f" >/dev/null; done
+          sha256sum offline/*.zip | tee offline/SHA256SUMS.txt
+          du -h offline/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CS2-v18-offline-runtime
+          path: offline/
+          compression-level: 0
