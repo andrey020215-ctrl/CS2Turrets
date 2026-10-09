@@ -5,7 +5,7 @@ on:
   push:
     branches: [wintersnow-ready]
     paths:
-      - 'AdminVipMenuCS2-v17-SOURCE.zip'
+      - '.ci/adminvip_v17_zip/**'
       - '.github/workflows/adminvip-v17-build.yml'
 
 jobs:
@@ -16,15 +16,34 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
-      - name: Extract source
+      - name: Rebuild and verify source archive
         run: |
-          rm -rf adminvip_v17_src out package
+          rm -rf adminvip_v17_src out package AdminVipMenuCS2-v17-GOOD.zip
           mkdir -p adminvip_v17_src
-          unzip -o AdminVipMenuCS2-v17-SOURCE.zip -d adminvip_v17_src
+          cat .ci/adminvip_v17_zip/part*.b64 | tr -d '\r\n' | base64 -d > AdminVipMenuCS2-v17-GOOD.zip
+          unzip -t AdminVipMenuCS2-v17-GOOD.zip
+          unzip -o AdminVipMenuCS2-v17-GOOD.zip -d adminvip_v17_src
           echo '--- Integrated settings ---'
           grep -R -n -E 'css_admin|AdminUnlockSeconds|WinterDust2WorkshopId|WinterMirageWorkshopId' adminvip_v17_src || true
-          echo '--- Source tree ---'
-          find adminvip_v17_src -maxdepth 3 -type f -print
+      - name: Local-test admin access patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = next(Path("adminvip_v17_src").rglob("AdminVipMenuCS2.cs"))
+          s = p.read_text(encoding="utf-8-sig")
+          s2, n = re.subn(
+              r'private bool IsAdmin\(CCSPlayerController p\)\s*=>\s*AdminManager\.PlayerHasPermissions\(p, Config\.AdminPermission\)\s*\|\|\s*AdminManager\.PlayerHasPermissions\(p, "@css/root"\);',
+              'private bool IsAdmin(CCSPlayerController p) => Usable(p);',
+              s,
+              count=1,
+              flags=re.S
+          )
+          if n != 1:
+              raise SystemExit("Could not patch IsAdmin for local test build")
+          p.write_text(s2, encoding="utf-8")
+          print("Patched IsAdmin: local test = any usable human player.")
+          PY
       - name: Build
         run: |
           CSPROJ=$(find adminvip_v17_src -name 'AdminVipMenuCS2.csproj' -print -quit)
