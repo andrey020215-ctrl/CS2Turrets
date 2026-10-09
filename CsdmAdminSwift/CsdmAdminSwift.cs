@@ -184,7 +184,7 @@ public sealed class CsdmAdminSwift : BasePlugin
     {
         try
         {
-            var items = player.Controller.ItemServices;
+            var items = player.PlayerPawn?.ItemServices;
             if (items is null)
             {
                 player.SendChat("[CSDM] Item service unavailable.");
