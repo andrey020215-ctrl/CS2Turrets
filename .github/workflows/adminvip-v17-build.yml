@@ -1,0 +1,35 @@
+name: Build AdminVipMenuCS2 v17
+on:
+  workflow_dispatch:
+  push:
+    branches: [wintersnow-ready]
+    paths:
+      - 'AdminVipMenuCS2-v17-SOURCE.zip'
+      - '.github/workflows/adminvip-v17-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Extract source
+        run: |
+          rm -rf _adminvip_src out package
+          mkdir -p _adminvip_src
+          unzip -q AdminVipMenuCS2-v17-SOURCE.zip -d _adminvip_src
+      - name: Build
+        run: dotnet publish _adminvip_src/src/AdminVipMenuCS2.csproj -c Release -o out
+      - name: Package
+        run: |
+          mkdir -p package/addons/counterstrikesharp/plugins/AdminVipMenuCS2
+          mkdir -p package/addons/counterstrikesharp/configs/plugins/AdminVipMenuCS2
+          cp out/AdminVipMenuCS2.dll package/addons/counterstrikesharp/plugins/AdminVipMenuCS2/
+          if [ -f out/AdminVipMenuCS2.deps.json ]; then cp out/AdminVipMenuCS2.deps.json package/addons/counterstrikesharp/plugins/AdminVipMenuCS2/; fi
+          cp _adminvip_src/install/addons/counterstrikesharp/configs/plugins/AdminVipMenuCS2/AdminVipMenuCS2.json package/addons/counterstrikesharp/configs/plugins/AdminVipMenuCS2/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AdminVipMenuCS2-v17-Ready
+          path: package/
