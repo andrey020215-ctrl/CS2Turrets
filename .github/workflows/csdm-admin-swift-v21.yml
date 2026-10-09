@@ -1,0 +1,29 @@
+name: Build CSDM Admin Swift v21
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [wintersnow-ready]
+    paths:
+      - 'CsdmAdminSwift/**'
+      - '.github/workflows/csdm-admin-swift-v21.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish
+        run: dotnet publish CsdmAdminSwift/CsdmAdminSwift.csproj -c Release -o out
+      - name: Package
+        run: |
+          mkdir -p package/CsdmAdminSwift
+          cp out/CsdmAdminSwift.dll package/CsdmAdminSwift/
+          if [ -f out/CsdmAdminSwift.deps.json ]; then cp out/CsdmAdminSwift.deps.json package/CsdmAdminSwift/; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CsdmAdminSwift-v21-READY
+          path: package/
