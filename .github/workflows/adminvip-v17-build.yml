@@ -1,4 +1,5 @@
 name: Build AdminVipMenuCS2 v17
+
 on:
   workflow_dispatch:
   push:
@@ -17,19 +18,24 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Extract source
         run: |
-          rm -rf _adminvip_src out package
-          mkdir -p _adminvip_src
-          unzip -q AdminVipMenuCS2-v17-SOURCE.zip -d _adminvip_src
+          rm -rf adminvip_v17_src out package
+          mkdir -p adminvip_v17_src
+          unzip -o AdminVipMenuCS2-v17-SOURCE.zip -d adminvip_v17_src
+          echo '--- Integrated settings ---'
+          grep -R -n -E 'css_admin|AdminUnlockSeconds|WinterDust2WorkshopId|WinterMirageWorkshopId' adminvip_v17_src || true
+          echo '--- Source tree ---'
+          find adminvip_v17_src -maxdepth 3 -type f -print
       - name: Build
-        run: dotnet publish _adminvip_src/src/AdminVipMenuCS2.csproj -c Release -o out
+        run: |
+          CSPROJ=$(find adminvip_v17_src -name 'AdminVipMenuCS2.csproj' -print -quit)
+          test -n "$CSPROJ"
+          dotnet publish "$CSPROJ" -c Release -o out
       - name: Package
         run: |
-          mkdir -p package/addons/counterstrikesharp/plugins/AdminVipMenuCS2
-          mkdir -p package/addons/counterstrikesharp/configs/plugins/AdminVipMenuCS2
-          cp out/AdminVipMenuCS2.dll package/addons/counterstrikesharp/plugins/AdminVipMenuCS2/
-          if [ -f out/AdminVipMenuCS2.deps.json ]; then cp out/AdminVipMenuCS2.deps.json package/addons/counterstrikesharp/plugins/AdminVipMenuCS2/; fi
-          cp _adminvip_src/install/addons/counterstrikesharp/configs/plugins/AdminVipMenuCS2/AdminVipMenuCS2.json package/addons/counterstrikesharp/configs/plugins/AdminVipMenuCS2/
+          mkdir -p package/AdminVipMenuCS2
+          cp out/AdminVipMenuCS2.dll package/AdminVipMenuCS2/
+          if [ -f out/AdminVipMenuCS2.deps.json ]; then cp out/AdminVipMenuCS2.deps.json package/AdminVipMenuCS2/; fi
       - uses: actions/upload-artifact@v4
         with:
-          name: AdminVipMenuCS2-v17-Ready
+          name: AdminVipMenuCS2-v17-READY
           path: package/
