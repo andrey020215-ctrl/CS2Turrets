@@ -27,6 +27,10 @@ public sealed class TurretConfig : BasePluginConfig
     [JsonPropertyName("CustomStandardModel")] public string CustomStandardModel { get; set; } = "models/cs2turrets/turret_lv1.vmdl";
     [JsonPropertyName("CustomRocketModel")] public string CustomRocketModel { get; set; } = "models/cs2turrets/turret_lv4.vmdl";
     [JsonPropertyName("CustomProjectileModel")] public string CustomProjectileModel { get; set; } = "models/cs2turrets/rocket.vmdl";
+    // Optional Source 2 animation sequence names, not procedural barrel rotation.
+    // Leave empty for the original static custom GLB models.
+    [JsonPropertyName("CustomFireAnimation")] public string CustomFireAnimation { get; set; } = "";
+    [JsonPropertyName("CustomIdleAnimation")] public string CustomIdleAnimation { get; set; } = "";
 
     // Model variants corresponding to actual GLB source meshes in the separate asset pack.
     // Requires compiled .vmdl_c, materials and client-side delivery before enabling.
