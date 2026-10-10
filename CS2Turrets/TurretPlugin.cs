@@ -28,6 +28,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         public required string Kind;
         public required Vector Position;
         public int Level = 1;
+        public bool Firing;
         public float NextShot;
         public float Yaw;
         public readonly List<CBaseModelEntity> Visuals = new();
@@ -215,6 +216,10 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             prop.SetModel(model);
             prop.Teleport(position, rotation, null);
             prop.DispatchSpawn();
+            // A compiled Source 2 animated model can return to this animation after firing.
+            // The animation must exist in the model: static GLB mesh has no animations.
+            if (Config.UseCustomTurretModel && !string.IsNullOrWhiteSpace(Config.CustomIdleAnimation))
+                prop.AcceptInput("SetDefaultAnimation", null, null, Config.CustomIdleAnimation);
             turret.Visuals.Add(prop);
         }
         catch (Exception ex)
@@ -224,6 +229,42 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         }
     }
 
+
+    // Optional animated Source 2 model support. This does not rotate a static mesh:
+    // the model must contain a matching compiled firing animation.
+    private void StartTurretFireAnimation(Turret turret)
+    {
+        if (turret.Firing || !Config.UseCustomTurretModel ||
+            string.IsNullOrWhiteSpace(Config.CustomFireAnimation)) return;
+
+        turret.Firing = true;
+        foreach (var visual in turret.Visuals)
+        {
+            if (!visual.IsValid) continue;
+            try { visual.AcceptInput("SetAnimationNoReset", null, null, Config.CustomFireAnimation); }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Unable to start optional turret firing animation");
+            }
+        }
+    }
+
+    private void StopTurretFireAnimation(Turret turret)
+    {
+        if (!turret.Firing) return;
+        turret.Firing = false;
+
+        if (!Config.UseCustomTurretModel || string.IsNullOrWhiteSpace(Config.CustomIdleAnimation)) return;
+        foreach (var visual in turret.Visuals)
+        {
+            if (!visual.IsValid) continue;
+            try { visual.AcceptInput("SetAnimation", null, null, Config.CustomIdleAnimation); }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Unable to stop optional turret firing animation");
+            }
+        }
+    }
 
     private static Vector ForwardOffset(Vector origin, float yaw, float forward, float up)
     {
@@ -468,7 +509,11 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
                 .Where(p => Distance(turret.Position, p.PlayerPawn.Value!.AbsOrigin!) <= range)
                 .OrderBy(p => Distance(turret.Position, p.PlayerPawn.Value!.AbsOrigin!))
                 .FirstOrDefault(p => Visible(turret, p));
-            if (target == null) continue;
+            if (target == null)
+            {
+                StopTurretFireAnimation(turret);
+                continue;
+            }
             if (turret.Level >= Math.Max(2, Config.RocketLevel))
             {
                 if (_rockets.Count >= Math.Clamp(Config.MaxActiveRockets, 0, 128)) continue;
@@ -477,6 +522,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             }
             else
             {
+                StartTurretFireAnimation(turret);
                 turret.NextShot = _clock + Math.Max(0.15f, stats.FireInterval);
                 Damage(target, Math.Max(1, stats.Damage + (turret.Level - 1) * Config.DamagePerLevelBonus));
             }
@@ -517,6 +563,8 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
         if (turret == null) return;
         turret.Level++;
         if (turret.Level == Config.RocketLevel)
+            StopTurretFireAnimation(turret);
+        if (turret.Level == Config.RocketLevel)
         {
             if (Config.UseCustomTurretModel)
             {
@@ -556,6 +604,7 @@ public sealed class TurretPlugin : BasePlugin, IPluginConfig<TurretConfig>
             catch (Exception ex) { Logger.LogWarning(ex, "Unable to remove custom turret model"); }
         }
         turret.Visuals.Clear();
+        turret.Firing = false;
     }
 
     private void Remove(Turret turret)
