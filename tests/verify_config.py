@@ -28,6 +28,13 @@ for method in ("AddRocketLauncher", "LaunchRocket", "AdvanceRockets", "Detonate"
 # until compiled Source 2 resources are installed and distributed to clients.
 assert settings["UseCustomTurretModel"] is False
 assert settings["UseTeamSkins"] is True
+# Animation opt-in must remain disabled for unanimated stock/generated models.
+assert settings["CustomFireAnimation"] == ""
+assert settings["CustomIdleAnimation"] == ""
+assert "StartTurretFireAnimation(turret)" in plugin_source
+assert "StopTurretFireAnimation(turret)" in plugin_source
+assert 'AcceptInput("SetAnimationNoReset"' in plugin_source
+assert 'AcceptInput("SetAnimation"' in plugin_source
 for key in ("TerroristStandardModel", "CounterTerroristStandardModel",
             "TerroristRocketModel", "CounterTerroristRocketModel", "CustomProjectileModel"):
     assert settings[key].startswith("models/cs2turrets/")
