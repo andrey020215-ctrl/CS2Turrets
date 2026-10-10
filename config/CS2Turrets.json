@@ -58,5 +58,7 @@
   "TerroristStandardModel": "models/cs2turrets/sentry_red_lv1.vmdl",
   "CounterTerroristStandardModel": "models/cs2turrets/sentry_blue_lv1.vmdl",
   "TerroristRocketModel": "models/cs2turrets/sentry_red_lv4.vmdl",
-  "CounterTerroristRocketModel": "models/cs2turrets/sentry_blue_lv4.vmdl"
+  "CounterTerroristRocketModel": "models/cs2turrets/sentry_blue_lv4.vmdl",
+  "CustomFireAnimation": "",
+  "CustomIdleAnimation": ""
 }
